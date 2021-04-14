@@ -218,8 +218,10 @@ Sea $S = \{F_1, F_2, ..., F_n\}$, $F$ es consecuencia lógica de S sii $(F_1 \we
 Sea $S$ un conjunto de formulas cerradas y $F$ una fórmula cerrada sobre $L$ de primer orden:
 $$ S \models F~\text{ sii }~S \cup \{\neg F\} \text{ es insatisfactible.}$$ 
 
+##### Demostración
+
 <details>
-  <summary>Demostración</summary>
+  <summary>Expandir</summary>
 
   ![](imagenes/dem-teo-cons1.png)
   ![](imagenes/dem-teo-cons2.png)
@@ -234,3 +236,4 @@ A este tipo de demostración se le llama **prueba por refutación**: se niega lo
 Debemos buscar una forma automática de resolver este problema, para esto se introducen los **métodos de resolución**.
 
 ## Resolución
+
