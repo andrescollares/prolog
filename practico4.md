@@ -12,4 +12,4 @@
 
  - $\neg (p \vee \neg q) \wedge (s \rightarrow t) \underset{DeMorgan}\equiv \neg p \wedge q \wedge (\neg s \vee t) \underset{distr.}\equiv \neg p \wedge (q \wedge \neg s) \vee (q \wedge t) \underset{conmut.~assoc.}\equiv (\neg p \wedge \neg s) \wedge q \vee (q \wedge t) \underset{abs.}\equiv \neg p \wedge \neg s \wedge q$ ???
 
- - $\neg (p \vee q) \wedge (p \vee q) \underset{DeMorgan}\equiv \neg p \wedge \neg q \wedge (p \vee q) \underset{distr.}\equiv \neg p \wedge ((\neg q \wedge p) \vee \underbrace{(\neg q \wedge q)}_{\bot}) \underset{ident.}\equiv \neg p \wedge \neg q \wedge p $ desde antes se ve que es falsa siempre ._.
+ - $\neg (p \vee q) \wedge (p \vee q) \underset{DeMorgan}\equiv \neg p \wedge \neg q \wedge (p \vee q) \underset{distr.}\equiv \neg p \wedge ((\neg q \wedge p) \vee \underbrace{(\neg q \wedge q)}_{\bot}) \underset{ident.}\equiv \neg p \wedge \neg q \wedge p \underset{conmut.~comp }\equiv F$ 

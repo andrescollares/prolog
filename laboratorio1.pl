@@ -38,8 +38,8 @@ fila(1, [[X|R]|_], [X|R]).
 
 %--------------------------------------------
 % columna(+M, ?C, ?R) <- R es el resultado de quitar la primera columna C de la matriz M
-columna([X|F], [X], F).
-columna([[M|E]|_], [M|C], [E|F]):- columna(E, C, F).
+columna([[X|F]], [X], [F]).
+columna([[X|F]|M], [X|C], [F|R]) :- columna(M, C, R).
 
 % col(+N,+M,?C) ← C es la columna N-ésima de la matriz.
 col(N, M, C) :- N1 is N - 1, columna(M, _, R), col(N1, R, C).
@@ -47,7 +47,7 @@ col(1, M, C) :- columna(M, C, _).
 
 %--------------------------------------------
 % transpuesta(+M, ?T) ← T es la matriz transpuesta de M
-transpuesta([[A|B]],[T]):- columna([[A]|B], T, _).
+transpuesta([[A]|R],[T]):- columna([[A]|R], T, _).
 transpuesta(M, [C|T]):- columna(M, C, R), transpuesta(R, T).
 
 %--------------------------------------------
