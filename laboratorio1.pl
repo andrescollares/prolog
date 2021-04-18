@@ -1,14 +1,13 @@
 %EJ 1 ---------------------------------------------------------
 % elegir(?X, ?L1, ?L2) ← La lista L2 resulta de eliminar un elemento de la lista L1.
 elegir(X,[X|R1],R1). 
-elegir(X,[Y|R1],[Y|R2]) :- elegir(X,R1,R2). %
+elegir(X,[Y|R1],[Y|R2]) :- elegir(X,R1,R2). 
 
 %--------------------------------------------
 % elegirN(?L,+L1,+N,?L2) ← La lista L2 resulta de eliminar N elementos de la lista L1.
-% La lista L tiene los elementos eliminados, en el orden en que se seleccionaron. El predicado
-% falla si la lista es vacía.
+% La lista L tiene los elementos eliminados, en el orden en que se seleccionaron. 
+% El predicado falla si la lista es vacía.
 elegirN([], L1, 0, L1).
-elegirN([X], L1, 1, L2) :- member(X, L1), elegir(X, L1, L2).
 elegirN([X|R], L1, N, L2) :- member(X, L1), elegir(X, L1, L1X), N1 is N - 1, elegirN(R, L1X, N1, L2).
 
 %--------------------------------------------
