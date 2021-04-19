@@ -15,6 +15,12 @@ elegirN([X|R], L1, N, L2) :- member(X, L1), elegir(X, L1, L1X), N1 is N - 1, ele
 suma([X], X).
 suma([X|L], S) :- suma(L, R), S is X + R.
 
+% suma(L, S) :- sumaAcc(L, 0, S).
+
+% sumaAcc(+L, +Acc, ?S) <- S es la suma de los elementos de la lista L utilizando el acumulador Acc.
+% sumaAcc([], Acc, Acc).
+% sumaAcc([X|L], Acc, S) :- AccX is Acc + X, sumaAcc(L, AccX, S).
+
 %--------------------------------------------
 % fila_matriz(+N, +E, ?F) <- F es una fila de N celdas, donde cada celda tiene el valor E.
 fila_matriz(0, _, []).
@@ -54,7 +60,7 @@ transpuesta(M, [C|T]):- columna(M, C, R), transpuesta(R, T).
 % numeros(+Inicio, +Fin, ?Lista) ← Lista es una lista ordenada de los números entre Inicio y Fin.
 % Si Inicio es mayor que fin, el predicado falla.
 numeros(X,Y,[X,Y]):- X is Y-1.
-numeros(X,Y,[X |L1]):- X < Y, X1 is X+1, numeros(X1, Y, L1).
+numeros(X,Y,[X|L]):- X < Y, X1 is X+1, numeros(X1, Y, L).
 
 %EJ 2 ---------------------------------------------------------
 % primos(+N,?Primos) ← Primos es una lista de los números primos menores que N,
@@ -67,10 +73,10 @@ eliminar_multiplos_X(_, [], []).
 eliminar_multiplos_X(X, [A|L], S) :- A mod X =:= 0, eliminar_multiplos_X(X, L, S).
 eliminar_multiplos_X(X, [A|L], [A|S]) :- A mod X =\= 0, eliminar_multiplos_X(X, L, S).
 
-% eliminar_multiplos(+L, ?R, +N) <- R es el resultado de eliminar todos los numeros compuestos
+% eliminar_compuestos(+L, ?R, +N) <- R es el resultado de eliminar todos los numeros compuestos
 % de la lista L, N es el último número en la lista L.
-eliminar_multiplos([X|L], [X|L], N) :- X*X > N.
-eliminar_multiplos([X|L], [X|R], N) :- X*X =< N, eliminar_multiplos_X(X, L, S), eliminar_multiplos(S, R, N).
+eliminar_compuestos([X|L], [X|L], N) :- X*X > N.
+eliminar_compuestos([X|L], [X|R], N) :- X*X =< N, eliminar_multiplos_X(X, L, S), eliminar_compuestos(S, R, N).
 
 
 %EJ 3 ---------------------------------------------------------
