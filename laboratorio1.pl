@@ -65,7 +65,7 @@ numeros(X,Y,[X|L]):- X < Y, X1 is X+1, numeros(X1, Y, L).
 %EJ 2 ---------------------------------------------------------
 % primos(+N,?Primos) ← Primos es una lista de los números primos menores que N,
 % encontrados utilizando la Criba de Eratóstenes.
-primos(N, Primos) :- numeros(2, N, L), eliminar_multiplos(L, Primos, N).
+primos(N, Primos) :- numeros(2, N, L), eliminar_compuestos(L, Primos, N).
 
 % eliminar_multiplos_x(+X, +L, ?S) <- S es el resultado de eliminar todos los múltiplos de X
 % de la lista L.
