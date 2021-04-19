@@ -15,6 +15,9 @@ elegirN([X|R], L1, N, L2) :- member(X, L1), elegir(X, L1, L1X), N1 is N - 1, ele
 suma([X], X).
 suma([X|L], S) :- suma(L, R), S is X + R.
 
+% sumaX(+X, ?S) <- S es la suma de todos los números entre 1 y X (incluyendolos).
+% sumaX(X, S) :- numeros(1, X, N), suma(N, S). 
+
 % suma(L, S) :- sumaAcc(L, 0, S).
 
 % sumaAcc(+L, +Acc, ?S) <- S es la suma de los elementos de la lista L utilizando el acumulador Acc.
