@@ -27,12 +27,12 @@ suma([X|L], S) :- suma(L, R), S is X + R.
 %--------------------------------------------
 % fila_matriz(+N, +E, ?F) <- F es una fila de N celdas, donde cada celda tiene el valor E.
 fila_matriz(0, _, []).
-fila_matriz(N, E, [X|F]) :- N1 is N - 1, X = E, fila_matriz(N1, E, F).
+fila_matriz(N, E, [X|F]) :- N > 0, N1 is N - 1, X = E, fila_matriz(N1, E, F).
 
 % matriz(+M,+N,+E,?A) ← A es una matriz de M filas y N columnas, donde cada celda tiene el valor E.
 % La matriz se representa mediante una lista de M filas, donde cada fila es una lista de N celdas.
 matriz(0, _, _, []).
-matriz(M, N, E, [[X|F]|A]) :- fila_matriz(N, E, [X|F]), M1 is M - 1, matriz(M1, N, E, A).
+matriz(M, N, E, [[X|F]|A]) :- M > 0, fila_matriz(N, E, [X|F]), M1 is M - 1, matriz(M1, N, E, A).
 
 %--------------------------------------------
 % valor_celda(+I,+J,+A,?E) ← E es el contenido de la celda (I,J) de la matriz A.

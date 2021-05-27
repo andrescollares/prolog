@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Arabelog</title>
+
+  <!-- Bootstrap 4.5 -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+
+  <!-- Vue.js -->
+  <script src="https://unpkg.com/vue@next"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+
+</head>
+
+<body>
+  <div id="body">
+
+	<!-- Barra de arriba -->
+ 
+    <div id="content" class="container">
+
+      <!-- Game info text -->
+      <div id="game_info" class="bodyBlock">
+        <h3>&Aacute;rabelog</h3>
+        <p>
+          Curso de Programaci&oacute;n L&oacute;gica 2021 - UdelaR
+        </p>
+      </div>
+
+      <!-- Opciones de juego -->
+      <div id="gameOptions" class="bodyBlock">
+        <form class="form-inline">
+          
+          <div class="form-group">
+            <div class="btn-group" role="group">
+              <label>Jugador 1(X) &nbsp </label>
+              <button type="button" class="btn btn-primary" :disabled="jugadorX === 'H'" @click="setJugadorX('H')">H</button>
+              <button type="button" class="btn btn-primary" :disabled="jugadorX === 'M'" @click="setJugadorX('M')">M</button>
+              <button type="button" class="btn btn-dark">
+			          <span class="badge badge-light">{{piezasX}}</span>
+			        </button>
+              <button type="button" class="btn btn-danger">
+			          <span class="badge badge-light">{{turnos_perdidosX}}</span>
+			        </button>
+              <button type="button" class="btn btn-danger">
+			          <span class="badge badge-light">{{jugadas_sin_capturarX}}</span>
+			        </button>
+
+                <select v-model="estrategiaX" v-if="jugadorX === 'M'">
+                  <option value="minimax">minimax</option>
+                  <option value="baseia">baseia</option>
+                  <option value="dummy" selected>dummy</option>
+                  </select>
+                <input v-model="nivel_minimaxX" size="1"  v-if="jugadorX === 'M'">
+
+              <label>&nbsp &nbsp Jugador 2(O) &nbsp </label>
+              <button type="button" class="btn btn-primary" :disabled="jugadorO === 'H'" @click="setJugadorO('H')">H</button>
+              <button type="button" class="btn btn-primary" :disabled="jugadorO === 'M'" @click="setJugadorO('M')">M</button>
+              <button type="button" class="btn btn-dark">
+			          <span class="badge badge-light">{{piezasO}}</span>
+			        </button>
+              <button type="button" class="btn btn-danger">
+			          <span class="badge badge-light">{{turnos_perdidosO}}</span>
+			        </button>
+              <button type="button" class="btn btn-danger">
+			          <span class="badge badge-light">{{jugadas_sin_capturarO}}</span>
+			        </button>
+
+              <select v-model="estrategiaO" v-if="jugadorO === 'M'">
+                <option value="minimax">minimax</option>
+                <option value="baseia">baseia</option>
+                <option value="dummy" selected>dummy</option>
+              </select>
+              <input v-model="nivel_minimaxO" size="1"  v-if="jugadorO === 'M'">
+
+
+
+
+            </div>
+          </div>
+        </form>
+        <br>
+        <form class="form-inline">
+          <div class="form-group">
+            <div class="btn-group" role="group">
+              <label>Juega &nbsp; </label>
+              <button type="button" class="btn btn-dark" :disabled="true">{{jugador_actual}}&nbsp;</button>
+              <label>Fase &nbsp; </label>
+              <button type="button" class="btn btn-dark" :disabled="true">{{fase_juego}}&nbsp;</button>
+
+              <label>&nbsp;&nbsp;&nbsp;&nbsp; </label>
+              
+              <button type="button" class="btn btn-primary" @click="resizeBoard">Reiniciar</button>&nbsp;
+              
+              <div v-if="juega_IA">
+                <button type="button" class="btn btn-primary" @click="hacer_jugadaIA">Jugar IA</button>&nbsp;
+              </div>
+
+              <div v-if="debe_capturar===true">
+                <button type="button" class="btn btn-warning" disabled="true" @click="cambiar_turno()">Debe capturar o pasar</button>
+                <button type="button" class="btn btn-danger"  @click="cambiar_turno()">Pasar</button>
+              </div>
+
+
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tablero Arabe -->
+      <div id="theGame" class="bodyBlock">
+        <table id="gameBoard">
+          <tr v-for="(row, rowIndex) in this.board" class="">
+            <td v-for="(cell, cellIndex) in row" class="boardCell" @click="mover(rowIndex, cellIndex)">{{ cell }}</td>
+          </tr>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- Info Modal -->
+    <div class="modal fade" id="infoModal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">{{ infoModalText }}</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal" @click="">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+
+</html>
+
+
+<!-- Frontend Logic -->
+<script>
+  const App = {
+    data() {
+      return {
+        // board tiene el tablero
+        boardSize: 5,
+        board: null,
+        jugadorX:'H', estrategiaX:null, nivel_minimaxX:3,
+        jugadorO:'H', estrategiaO:null, nivel_minimaxO:3,
+        jugador_actual:'X',
+        
+        piezasX:0, 
+        turnos_perdidosX:0,
+        jugadas_sin_capturarX:0,
+        
+        piezasO:0,
+        turnos_perdidosO:0,
+        jugadas_sin_capturarO:0,
+
+        //nivel_minimax: 3,
+        fase_juego:1,
+        en_jugada:false,
+        debe_capturar:false,
+        fila_origen:null,
+        columna_origen:null,
+        infoModalText: null,
+
+      }
+    },
+
+    computed:{
+      // 
+      juega_IA(){
+        if (this.jugador_actual==='X' && this.jugadorX==='M')
+          res=true;
+        else if (this.jugador_actual==='O' && this.jugadorO==='M')
+          res=true;
+        else  
+          res=false;
+        return res;
+      },
+
+      rival(){
+        if (this.jugador_actual=='X')
+          return 'O';
+        else
+          return 'X';
+      }
+
+    },
+
+    mounted() {
+      this.resizeBoard();
+    },
+
+    methods: {
+      createBoard(size) {
+        var newBoard = []
+        for (var i = 0; i < size; i++) {
+          newBoard[i] = [];
+          for (var j = 0; j < size; j++) {
+            newBoard[i][j] = "";
+          }
+        }
+
+        /* Para pruebas */
+        
+        
+        newBoard[0][0]='';
+        newBoard[0][1]='';
+        newBoard[0][2]='';
+        newBoard[0][3]='';
+        newBoard[0][4]='';
+        
+        newBoard[1][0]='';
+        newBoard[1][1]='';
+        newBoard[1][2]='';
+        newBoard[1][3]='';
+        newBoard[1][4]='';
+
+        newBoard[2][0]='';
+        newBoard[2][1]='';
+        newBoard[2][2]='';
+        newBoard[2][3]='';
+        newBoard[2][4]='';
+
+        newBoard[3][0]='';
+        newBoard[3][1]='';
+        newBoard[3][2]='';
+        newBoard[3][3]='';
+        newBoard[3][4]='';
+
+        newBoard[4][0]='';
+        newBoard[4][1]='';
+        newBoard[4][2]='';
+        newBoard[4][3]='';
+        newBoard[4][4]='';
+       
+
+       
+ 
+        return newBoard;  
+      },
+
+    
+    
+      resizeBoard() {
+        this.board = this.createBoard(this.boardSize);
+        this.fase_juego=1;
+        this.jugador_actual='X';
+        this.turnos_perdidosX=0;
+        this.turnos_perdidosO=0;
+        this.piezasX=this.contar_piezas('X');
+        this.piezasO=this.contar_piezas('O');
+        this.en_jugada=false;
+        this.debe_capturar=false;
+        this.jugadas_sin_capturarX=0;
+        this.jugadas_sin_capturarO=0;
+      },
+
+      postDatosIA() {
+        if (this.jugador_actual=='X'){
+          vnivel_minimax=this.nivel_minimaxX
+          vestrategia=this.estrategiaX
+        }
+        else{
+          vnivel_minimax=this.nivel_minimaxO
+          vestrategia=this.estrategiaO
+        }
+
+        return {
+          tablero: this.board,
+          datos_estado:[this.turnos_perdidosX, 
+                        this.turnos_perdidosO, 
+                        this.jugadas_sin_capturarX, 
+                        this.jugadas_sin_capturarO,
+                        this.fase_juego],
+          nivel_minimax: vnivel_minimax,
+          jugador: this.jugador_actual,
+          estrategia:vestrategia
+        }
+      },
+
+      postDatosJugada(fila_origen,columna_origen,fila_destino,columna_destino) {
+        return {
+          tablero: this.board,
+          datos_estado:[this.turnos_perdidosX, 
+                        this.turnos_perdidosO, 
+                        this.jugadas_sin_capturarX, 
+                        this.jugadas_sin_capturarO, 
+                        this.fase_juego],
+          jugador_actual: this.jugador_actual,
+          fila_origen: fila_origen,
+          columna_origen: columna_origen,
+          fila_destino: fila_destino,
+          columna_destino: columna_destino,
+          debe_capturar:this.debe_capturar
+        }
+      },
+
+      postDatosConsulta(jugador){
+        return{
+          tablero: this.board,
+          datos_estado:[this.turnos_perdidosX, 
+                        this.turnos_perdidosO, 
+                        this.jugadas_sin_capturarX, 
+                        this.jugadas_sin_capturarO,
+                        this.fase_juego],
+          jugador: jugador
+        }
+      },
+
+      mover(rowIndex,cellIndex){
+
+        
+        // Obtengo el valor de la celda en la que se hizo click
+        val_celda=this.board[rowIndex][cellIndex];
+      
+        // Si esta jugando una mï¿½quina, no hace nada, porque no puede jugar
+        if (this.juega_IA){
+          return;
+        }
+
+        // Primera fase del juego: se insertan fichas
+        if (this.fase_juego==1){
+
+          // Control que la celda donde estoy insertando no tenga ya una ficha
+          if (val_celda !== ""){
+              alert("La celda ya esta ocupada!");
+          }
+
+          // No se puede insertar en el centro del tablero
+          else if (rowIndex===2 && cellIndex ===2){
+            alert("No se puede poner piezas en la celda central del tablero durante la Fase 1")
+          }
+
+          // Actualizo la casilla con la ficha insertada
+          else {
+            this.actualizar_celda(rowIndex,cellIndex);
+
+          }
+          
+          /* Al terminar el turno, veo si no hay cambio de Fase porque se llenaron las fichas */
+          if (this.piezasX==12 && this.piezasO==12) {
+            this.fase_juego=2;
+          }
+
+        }
+
+        // Segunda fase del juego: se mueven las fichas 
+        else if (this.fase_juego==2){ 
+          
+          // Si llega aquï¿½, entonces puede mover
+          if (this.jugador_actual=='X')
+            this.turnos_perdidosX=0;
+          else  
+            this.turnos_perdidosO=0;
+
+          // Comienza una jugada, debe hacer click en la celda origen
+          if (!this.en_jugada){ 
+
+            // Controlo que la celda origen sea del jugador actual
+            if (val_celda != this.jugador_actual){
+              alert("La celda origen no es del jugador actual");
+            }
+            else{
+              // Cambiamos el simbolo para mostrar que se esta jugando
+              // Registro en el estado mi fila y columna original, para cuando se complete la jugada
+              this.board[rowIndex][cellIndex]="-";
+              this.en_jugada=true;
+              this.fila_origen=rowIndex;
+              this.columna_origen=cellIndex;
+            }
+          }
+
+          // En este caso, estamos completando una jugada
+          else{
+            if (val_celda !== ""){
+              alert("La celda destino debe estar vac&iacute;")
+            }
+            else{ 
+              // Ejecuto el movimiento del jugador
+              this.api_ejecutar_movimiento(rowIndex,cellIndex);   
+            }
+          }
+        }
+      },
+
+      actualizar_celda(rowIndex,cellIndex){
+          this.board[rowIndex][cellIndex]=this.jugador_actual;          
+          if (this.jugador_actual === 'X'){
+              this.piezasX++;
+              if(this.piezasX % 2 == 0)
+                this.cambiar_turno();
+            }
+          else{ 
+              this.piezasO++;
+              if(this.piezasO % 2 == 0) 
+                this.cambiar_turno();
+          }
+      },
+
+      cambiar_turno(){
+        if (this.fase_juego==2 || (this.fase_juego==1 && this.piezasX==12 && this.piezasO==12)){
+          this.fase_juego=2;
+          // Verifico si el rival puede hacer una jugada
+          axios.post("/api/hay_movimiento",
+            this.postDatosConsulta(this.rival)).then(response => {
+              hay_mov=response.data.result;
+              if (hay_mov===false){
+                // Si el rival no puede mover, incremento el turno perdido
+                // y no cambio el turno, sigue jugando el mismo
+                this.incrementar_turnos_perdidos(this.rival);
+              }
+              else{
+                if(this.jugador_actual == 'X') 
+                  this.jugador_actual = 'O';
+                else
+                  this.jugador_actual = 'X';   
+              }
+              this.en_jugada=false;   
+              this.debe_capturar=false;
+
+              this.verificar_ganador();
+            
+            }).catch(() => {
+              this.showInfoModal("Problemas al ver si tiene movimientos posibles");
+            });
+        }
+        else{
+          if(this.jugador_actual == 'X') 
+            this.jugador_actual = 'O';
+          else
+            this.jugador_actual = 'X';  
+        }
+      },
+
+      contar_piezas(jugador){
+        piezas=0
+        for (var i = 0; i < 5; i++) {
+          for (var j = 0; j < 5; j++) {
+            if (this.board[i][j]===jugador){
+             piezas++;
+            }
+          }
+        }        
+        return piezas;
+      },
+
+      contar_piezas_rival(){
+        if (this.jugador_actual == 'X')
+          return this.contar_piezas('O');
+        else if (this.jugador_actual== 'O')
+          return this.contar_piezas('X');
+        else
+          return 0;
+          
+      },
+
+      incrementar_turnos_perdidos(jugador){
+        if (jugador==='X'){
+          this.turnos_perdidosX++;
+          this.jugadas_sin_capturarX++;
+        }
+        else{
+          this.turnos_perdidosO++;
+          this.jugadas_sin_capturarO++;
+        }
+      },
+
+      
+      verificar_ganador(){
+        // Veo si alguno ganï¿½ el partido
+        if (this.fase_juego==2){
+          // Control de que uno haya ganado 
+          if (this.piezasX==0 || this.turnos_perdidosX==3){
+            this.showInfoModal("El jugador O ha ganado la partida!");
+          }
+          else{
+            if (this.piezasO==0 || this.turnos_perdidosO==3){
+              this.showInfoModal("El jugador X ha ganado la partida!");
+           }
+          // Si ambos hace más de diez jugadas que no capturan, es empate
+          if (this.jugadas_sin_capturarX >= 12 && this.jugadas_sin_capturarO >=12)
+              this.showInfoModal("El juego se ha declarado empate!");
+
+
+          }            
+        }
+      },
+
+      setJugadorO(symbol){
+        this.jugadorO = symbol;
+
+        this.resizeBoard();
+      },
+
+      setJugadorX(symbol){
+        this.jugadorX = symbol;
+        this.resizeBoard();
+      },
+
+      es_IA(jugador){
+        if (jugador==='X' && this.jugadorX==='M')
+          return true;
+        else if (jugador==='O' && this.jugadorO==='M')
+          return true;
+        else 
+          return false;
+      },
+
+      // Ejecuto el movimiento y, si es válido, actualizo el tablero (PROLOG: ejecutar_movimiento) 
+      // Paso fila y columna +1 porque mis predicados de Prolog numeran a partir de 1 
+      api_ejecutar_movimiento(rowIndex,cellIndex){
+        axios.post("/api/ejecutar_movimiento", 
+          this.postDatosJugada(this.fila_origen+1,this.columna_origen+1,rowIndex+1,cellIndex+1)).then(response => {
+            if (response.data.tablero==''){
+              alert("Movimiento no v&aacute;lido");
+              this.board[this.fila_origen][this.columna_origen]=this.jugador_actual;
+              this.en_jugada=false;
+            }
+            else{
+              piezas_rival_antes=this.contar_piezas_rival();
+              this.board=response.data.tablero;
+              this.en_jugada = false;
+              this.piezasX=this.contar_piezas('X');
+              this.piezasO=this.contar_piezas('O');
+              if (this.jugador_actual=='X')
+                this.turnos_perdidosX=0;
+              else  
+                this.turnos_perdidosO=0;
+
+              // Si hubo captura, y hay captura posible, entonces permito un nuevo movimiento, en el que debe capturar piezas
+              if (this.contar_piezas_rival()< piezas_rival_antes){
+                if (this.jugador_actual=='X')
+                  this.jugadas_sin_capturarX=0;
+                else
+                  this.jugadas_sin_capturarO=0;
+
+                this.control_de_posible_captura();
+              }
+              else{
+                if (this.jugador_actual=='X')
+                  this.jugadas_sin_capturarX++;
+                else
+                  this.jugadas_sin_capturarO++;
+
+                  this.cambiar_turno();
+              }
+            }
+
+          }).catch(() => {
+                this.showInfoModal("Problemas al ejecutar el movimiento");
+          });
+      },
+
+      // Verifico si es posible capturar una nueva pieza por el mismo jugador, y en tal caso le doy turno externa
+      // De lo contrario, cambio el turno
+      control_de_posible_captura(){
+        axios.post("/api/hay_posible_captura",
+                this.postDatosConsulta(this.jugador_actual)).then(response => {
+                  hay_captura=response.data.result;
+                  
+                  if (hay_captura===true){
+                    this.debe_capturar=true;
+                  }
+                  else{
+                    this.cambiar_turno();
+                  }
+                }).catch((err) => {
+                  console.log(err.message);
+                  this.showInfoModal("Problemas al controlar si hay captura");
+                                });
+      },
+
+      // Pido a la IA que juegue
+      hacer_jugadaIA(){
+         axios.post("/api/mejor_movimientoIA",
+          this.postDatosIA()).then(response => {
+
+            if (response.data.tablero==''){
+              this.showInfoModal("Oops! La IA dice que no tiene jugadas");
+            }
+            else{
+              piezas_rival_antes=this.contar_piezas_rival();
+              this.board=response.data.tablero;
+              this.piezasX=this.contar_piezas('X');
+              this.piezasO=this.contar_piezas('O');
+
+              if (this.jugador_actual=='X')
+                this.turnos_perdidosX=0;
+              else  
+                this.turnos_perdidosO=0;
+
+
+              if (this.fase_juego==1){
+                this.cambiar_turno();
+                /* Al terminar el turno, veo si no hay cambio de Fase porque se llenaron las fichas */
+                if (this.piezasX==12 && this.piezasO==12) {
+                  this.fase_juego=2;
+                }
+              }
+              else{
+
+                // Si hubo captura, y hay captura posible, entonces permito un nuevo movimiento, en el que debe capturar piezas
+                // Si asumimos que el jugador de la IA siempre juega todo lo que puede, esto habría que comentarlo.
+                if (this.contar_piezas_rival()< piezas_rival_antes){
+                  if (this.jugador_actual=='X')
+                    this.jugadas_sin_capturarX=0;
+                  else
+                    this.jugadas_sin_capturarO=0;
+
+                  // Si la IA no quiso seguir capturando, es porque no quiso, y pierde el turno
+                  //this.control_de_posible_captura();
+                  this.cambiar_turno();
+                }
+                else{
+
+                  if (this.jugador_actual=='X')
+                    this.jugadas_sin_capturarX++;
+                  else
+                    this.jugadas_sin_capturarO++;
+
+
+                  this.cambiar_turno();
+                }
+              }
+            }
+          }).catch((err) => {
+            console.log(err.message);
+            this.showInfoModal("Problemas al invocar minimax");
+          });
+      },
+
+
+      showInfoModal(text) {
+        this.infoModalText = text;
+        $("#infoModal").modal("show");
+      },
+    }
+  }
+  
+  const app = Vue.createApp(App).mount("#body")
+</script>
+
+
+<!-- Frontend Styling -->
+<style>
+  .bodyBlock {
+    margin-top: 25px;
+    float: none;
+  }
+
+  .boardCell {
+    height: 100px;
+    width: 100px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 65px;
+    border: 1px solid black;
+    cursor: pointer
+  }
+
+  .form-group {
+    padding: 0 10px;
+  }
+
+  #boardSizeInput {
+    width: 65px;
+    text-align: center;
+  }
+</style>
