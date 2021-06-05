@@ -402,36 +402,36 @@ es_empate(Estado) :-
 % mejor_movimiento: dado un estado, un jugador, un nivel para minimax, y una estrategia, devuelve la mejor jugada posible
 % Estrategia es solamente un átomo que se le asigna para poder implementar más de una estrategia
 
-% mejor_movimiento(+Estado,+Jugador,+NivelMinimax,+Estrategia,-Estado2).
-% mejor_movimiento(Estado, Jugador, _, _, Estado2) :-
-%     gano(Estado, Jugador),
-%     oponente(Jugador, Oponente),
-%     gano(Estado, Oponente),
-%     es_empate(Estado).
+mejor_movimiento(+Estado,+Jugador,+NivelMinimax,+Estrategia,-Estado2).
+mejor_movimiento(Estado, Jugador, _, _, Estado2) :-
+    gano(Estado, Jugador),
+    oponente(Jugador, Oponente),
+    gano(Estado, Oponente),
+    es_empate(Estado).
 
 
-% mejor_movimiento(Estado, Jugador, Nivel, ia_grupo, Estado2) :-
-%     % ?? ValidateInput ??
-%     mejor_movimiento_step(Estado, Jugador, Jugador, Nivel, max, MejorMovimiento, _),
-%     Estado2 == Estado.
+mejor_movimiento(Estado, Jugador, Nivel, ia_grupo, Estado2) :-
+    % ?? ValidateInput ??
+    mejor_movimiento_step(Estado, Jugador, Jugador, Nivel, max, MejorMovimiento, _),
+    Estado2 == Estado.
 
 
-% mejor_movimiento_step(Estado, JugadorOriginal, Jugador, Nivel, MinMax, MejorJugada, MejorPuntaje) :-
-%     Nivel > 0,
-%     Nivel1 is Nivel - 1,
-%     movimientos_posibles(Jugador, Estado, MovimientosPosibles).
-%     mejor_jugada(MovimientosPosibles, JugadorOriginal, Jugador, MinMax, Nivel1, MejorJugada, MejorPuntaje).
+mejor_movimiento_step(Estado, JugadorOriginal, Jugador, Nivel, MinMax, MejorJugada, MejorPuntaje) :-
+    Nivel > 0,
+    Nivel1 is Nivel - 1,
+    movimientos_posibles(Jugador, Estado, MovimientosPosibles).
+    mejor_jugada(MovimientosPosibles, JugadorOriginal, Jugador, MinMax, Nivel1, MejorJugada, MejorPuntaje).
 
-% mejor_movimiento_step(Estado, JugadorOriginal, Jugador, Nivel, MinMax, MejorJugada, MejorPuntaje) :-
-% puntajeTablero( )
+mejor_movimiento_step(Estado, JugadorOriginal, Jugador, Nivel, MinMax, MejorJugada, MejorPuntaje) :-
+    valor_tablero(Nivel, Jugador, Estado, MejorPuntaje).
 
 
 movimientos_posibles(Jugador, Estado, MovimientosPosibles) :-
     % findall(PosicionJugador, , PosicionesJugador).
-    findall(NuevoEstado, hacer_movimiento_jugador(Estado, Jugador, NuevoEstado), MovimientosPosibles).
+    findall(NuevoEstado, hacer_movimiento_jugador(Estado, Jugador, normal, NuevoEstado), MovimientosPosibles).
 
 
-hacer_movimiento_jugador(Estado, Jugador, NuevoEstado) :-
+hacer_movimiento_jugador(Estado, Jugador, TipoMovimiento, NuevoEstado) :-
 
     arg(1, Estado, Tablero),
 
@@ -454,13 +454,85 @@ hacer_movimiento_jugador(Estado, Jugador, NuevoEstado) :-
     %Y2 < 6,
     between(Y1, Y2, Yf),
 
-    hacer_movimiento(Estado, Y ,X, Yf, Xf, normal, NuevoEstado).
+    hacer_movimiento(Estado, Y ,X, Yf, Xf, TipoMovimiento, NuevoEstado),
+    
+    indice_jugador(Jugador, Indice),
+    IndiceJug is 4 + Indice,
+    arg(IndiceJug, NuevoEstado, 0),
+
+    hacer_movimiento_jugador(Estado, Jugador, con_captura, NuevoEstado).
+
+hacer_movimiento_jugador(Estado, Jugador, TipoMovimiento, NuevoEstado) :-
+
+    arg(1, Estado, Tablero),
+
+    between(1, 5, Y),
+    arg(Y, Tablero, Fila),
+
+    between(1, 5, X),
+    
+    arg(X, Fila, Jugador),
+
+    X1 is X - 1,
+    % % X1 > 0,
+    X2 is X + 1,
+    % X2 < 6,
+    between(X1, X2, Xf),
+    
+    Y1 is Y - 1,
+    % Y1 > 0,
+    Y2 is Y + 1,
+    % Y2 < 6,
+    between(Y1, Y2, Yf),
+
+    hacer_movimiento(Estado, Y ,X, Yf, Xf, TipoMovimiento, NuevoEstado).
 
 % mejor_jugada([Movimiento|MovimientosPosibles], JugadorOriginal, Jugador, MinMax, Nivel, MejorJugada, MejorPuntaje).
 
+valor_tablero(0, _, _, 0).
+
+valor_tablero(_, Jugador, Estado, 1000) :-
+    gano(Estado, Jugador).
+    
+valor_tablero(_, Jugador, Estado, -1000) :-
+    oponente(Jugador, Oponente),
+    gano(Estado, Oponente).
+
+valor_tablero(_, Jugador, Estado, Valor) :-
+    Suma = suma(0),
+    contar_fichas(Estado, Jugador, Suma),
+    Valor == Suma.
+
+valor_tablero(_, Jugador, Estado, 0) :-
+    es_empate(Estado).
 
 
+contar_fichas(Estado, Jugador, Suma) :-
+    arg(1, Estado, Tablero),
 
+    between(1, 5, Y),
+    arg(Y, Tablero, Fila),
+
+    between(1, 5, X),
+    arg(X, Fila, Ficha),
+    
+    valor_ficha(Ficha, Jugador, Valor),
+
+    arg(1, Suma, Res),
+    ResActualizado is Res + Valor,
+    nb_setarg(1, Suma, ResActualizado),
+
+    fail.
+
+contar_fichas(_, _, _).
+
+valor_ficha(-, _, 0) :- !.
+
+valor_ficha(X, X, 1) :- !.
+
+valor_ficha(_, _, -1).
+    
+    
 
 
 
