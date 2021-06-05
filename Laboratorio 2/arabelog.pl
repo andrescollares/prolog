@@ -442,7 +442,7 @@ mejor_movimiento_step(Estado, JugadorOriginal, Jugador, Nivel, MinMax, MejorJuga
     mejor_jugada(Nivel1, JugadorOriginal, Jugador, MinMax, MovimientosPosibles, MejorJugada, MejorPuntaje).
 
 mejor_movimiento_step(_, JugadorOriginal, _, Nivel, _, _, MejorPuntaje) :-
-    valor_tablero(0, JugadorOriginal, Estado, MejorPuntaje).
+    tablero_final(0, JugadorOriginal, Estado, MejorPuntaje).
 
 
 % ?- mejor_movimiento(estado(m(f(x, x, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -)), 0,0,0,0,1), x, 3, ia_grupo, BestMove).
@@ -524,24 +524,21 @@ hacer_movimiento_jugador(Estado, Jugador, TipoMovimiento, NuevoEstado) :-
 
 % mejor_jugada([Movimiento|MovimientosPosibles], JugadorOriginal, Jugador, MinMax, Nivel, MejorJugada, MejorPuntaje).
 
-valor_tablero(0, _, _, 0).
-
-valor_tablero(_, Jugador, Estado, 1000) :-
-    gano(Estado, Jugador).
-    
-valor_tablero(_, Jugador, Estado, -200) :-
-    oponente(Jugador, Oponente),
-    gano(Estado, Oponente).
-
-valor_tablero(_, _, Estado, 0) :-
-    es_empate(Estado).
-
-valor_tablero(_, Jugador, Estado, Valor) :-
+tablero_final(0, Jugador, Estado, Valor) :-
     Suma = suma(0),
     contar_fichas(Estado, Jugador, Suma),
     arg(1, Suma, Res),
     Valor = Res.
 
+tablero_final(_, Jugador, Estado, 1000) :-
+    gano(Estado, Jugador).
+    
+tablero_final(_, Jugador, Estado, -1000) :-
+    oponente(Jugador, Oponente),
+    gano(Estado, Oponente).
+
+tablero_final(_, _, Estado, 0) :-
+    es_empate(Estado).
 
 
 contar_fichas(Estado, Jugador, Suma) :-
@@ -577,8 +574,8 @@ valor_ficha(_, _, -1).
 % mejor_movimiento(estado(m(f(x, -, -, x, -), f(-, -, -, -, -), f(o, -, -, -, -), f(x, -, -, -, -), f(-, -, -, -, -)), 0,0,0,0,2), x, 2, ia_grupo, BestMove).
 
     
-mejor_jugada(1, JugadorOriginal, Jugador, MinMax, [Jugada| RestoJugadas], MejorJugada, MejorPuntaje) :-
-    valor_tablero(Nivel, JugadorOriginal, Jugada, Puntaje),
+mejor_jugada(Nivel, JugadorOriginal, Jugador, MinMax, [Jugada| RestoJugadas], MejorJugada, MejorPuntaje) :-
+    tablero_final(Nivel, JugadorOriginal, Jugada, Puntaje),
     mejor_jugada(Nivel, JugadorOriginal, Jugador, MinMax, RestoJugadas, MejorJugadaActual, MejorPuntajeActual),
     compararJugadas(MinMax, Jugada, Puntaje, MejorJugadaActual, MejorPuntajeActual, MejorJugada, MejorPuntaje).
     
