@@ -419,28 +419,30 @@ mejor_movimiento(Estado, Jugador, Nivel, ia_grupo, Estado) :-
 
 
 mejor_movimiento(Estado, Jugador, _, _, Estado) :-
-    arg(6, Estado, Etapa),
-    Etapa == 2,
-    gano(Estado, Jugador),
+    arg(6, Estado, 2),
+    gano(Estado, Jugador);
+
+    arg(6, Estado, 2),
     oponente(Jugador, Oponente),
-    gano(Estado, Oponente),
+    gano(Estado, Oponente);
+
+    arg(6, Estado, 2),
     es_empate(Estado).
 
 mejor_movimiento(Estado, Jugador, Nivel, ia_grupo,  MejorJugada) :-
     % ?? ValidateInput ??
-    arg(6, Estado, Etapa),
-    Etapa == 2,
+    arg(6, Estado, 2),
     mejor_movimiento_step(Estado, Jugador, Jugador, Nivel, max,  MejorJugada, _).
 
 
 mejor_movimiento_step(Estado, JugadorOriginal, Jugador, Nivel, MinMax, MejorJugada, MejorPuntaje) :-
-    Nivel > 0,
+    Nivel > 0, !,
     Nivel1 is Nivel - 1,
     movimientos_posibles(Jugador, Estado, MovimientosPosibles),
     mejor_jugada(Nivel1, JugadorOriginal, Jugador, MinMax, MovimientosPosibles, MejorJugada, MejorPuntaje).
 
-mejor_movimiento_step(Estado, JugadorOriginal, _, Nivel, _, _, MejorPuntaje) :-
-    valor_tablero(Nivel, JugadorOriginal, Estado, MejorPuntaje).
+mejor_movimiento_step(_, JugadorOriginal, _, Nivel, _, _, MejorPuntaje) :-
+    valor_tablero(0, JugadorOriginal, Estado, MejorPuntaje).
 
 
 % ?- mejor_movimiento(estado(m(f(x, x, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -)), 0,0,0,0,1), x, 3, ia_grupo, BestMove).
@@ -448,6 +450,20 @@ mejor_movimiento_step(Estado, JugadorOriginal, _, Nivel, _, _, MejorPuntaje) :-
 movimientos_posibles(Jugador, Estado, MovimientosPosibles) :-
     % findall(PosicionJugador, , PosicionesJugador).
     findall(NuevoEstado, hacer_movimiento_jugador(Estado, Jugador, normal, NuevoEstado), MovimientosPosibles).
+
+
+hacer_movimiento_jugador(Estado, Jugador, normal, NuevoEstado) :-
+    \+ hay_movimiento(Estado, Jugador), !,
+
+    indice_jugador(Jugador, Indice),
+    IndiceJug is 2 + Indice,
+
+    arg(IndiceJug, Estado, JugSinMover),
+    JugSinMoverAct is JugSinMover + 1,
+
+    arg(IndiceJug, Estado, JugSinMoverAct),
+    
+    NuevoEstado == Estado.
 
 
 hacer_movimiento_jugador(Estado, Jugador, TipoMovimiento, NuevoEstado) :-
@@ -513,7 +529,7 @@ valor_tablero(0, _, _, 0).
 valor_tablero(_, Jugador, Estado, 1000) :-
     gano(Estado, Jugador).
     
-valor_tablero(_, Jugador, Estado, -1000) :-
+valor_tablero(_, Jugador, Estado, -200) :-
     oponente(Jugador, Oponente),
     gano(Estado, Oponente).
 
@@ -525,7 +541,6 @@ valor_tablero(_, Jugador, Estado, Valor) :-
     contar_fichas(Estado, Jugador, Suma),
     arg(1, Suma, Res),
     Valor = Res.
-
 
 
 
@@ -562,7 +577,7 @@ valor_ficha(_, _, -1).
 % mejor_movimiento(estado(m(f(x, -, -, x, -), f(-, -, -, -, -), f(o, -, -, -, -), f(x, -, -, -, -), f(-, -, -, -, -)), 0,0,0,0,2), x, 2, ia_grupo, BestMove).
 
     
-mejor_jugada(Nivel, JugadorOriginal, Jugador, MinMax, [Jugada| RestoJugadas], MejorJugada, MejorPuntaje) :-
+mejor_jugada(1, JugadorOriginal, Jugador, MinMax, [Jugada| RestoJugadas], MejorJugada, MejorPuntaje) :-
     valor_tablero(Nivel, JugadorOriginal, Jugada, Puntaje),
     mejor_jugada(Nivel, JugadorOriginal, Jugador, MinMax, RestoJugadas, MejorJugadaActual, MejorPuntajeActual),
     compararJugadas(MinMax, Jugada, Puntaje, MejorJugadaActual, MejorPuntajeActual, MejorJugada, MejorPuntaje).
@@ -574,11 +589,9 @@ mejor_jugada(Nivel, JugadorOriginal, Jugador, MinMax, [Jugada| RestoJugadas], Me
     mejor_movimiento_step(Jugada, JugadorOriginal, Oponente, Nivel, OtroMinMax, _, MejorPuntajeHoja),
     compararJugadas(MinMax, Jugada, MejorPuntajeHoja, MejorJugadaActual, MejorPuntajeActual, MejorJugada, MejorPuntaje).
 
+mejor_jugada(_, _, _, max, [], [], -2000).
 
-
-mejor_jugada(_, _, _, max, [], [], -12).
-
-mejor_jugada(_, _, _, min, [], [], 12).
+mejor_jugada(_, _, _, min, [], [], 2000).
 
 
 compararJugadas(max, Jugada1, Puntaje1, _, Puntaje2, Jugada1, Puntaje1):-
@@ -587,21 +600,16 @@ compararJugadas(max, Jugada1, Puntaje1, _, Puntaje2, Jugada1, Puntaje1):-
 compararJugadas(max, _, Puntaje1, Jugada2, Puntaje2, Jugada2, Puntaje2):-
         Puntaje1 < Puntaje2, !.
 
-
 compararJugadas(min, Jugada1, Puntaje1, _, Puntaje2, Jugada1, Puntaje1):-
         Puntaje1 =< Puntaje2, !.
-
 
 compararJugadas(min, _, Puntaje1, Jugada2, Puntaje2, Jugada2, Puntaje2):-
         Puntaje1 > Puntaje2, !.
 
 
-
-
 %cambiarMinMax(+MinMax, -otroMinMax)
 cambiarMinMax(min,max).
 cambiarMinMax(max,min).
-
 
 
 mejor_movimiento_etapa1(Estado, Jugador, _) :-
