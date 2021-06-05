@@ -33,7 +33,7 @@ select_K_numeros(K, Pool, [X|R]) :- K >= 1, select(X, Pool, Pool_sin_X), K1 is K
 lista_de_ceros(0, []).
 lista_de_ceros(N, [0|R]) :- N >= 1, N1 is N - 1, lista_de_ceros(N1, R).
 
-primer_tablero(K, N, Primer_tablero) :- pool_numeros(N, PoolPosible), select_K_numeros(K, PoolPosible, Pool), NmK is N - K, lista_de_ceros(NmK, LCeros), append(Pool, LCeros, Primer_tablero). 
+primer_tablero(K, N, Primer_tablero) :- pool_numeros(N, PoolPosible), select_K_numeros(K, PoolPosible, Pool), NmK is N - K, lista_de_ceros(NmK, LCeros), append(Pool, LCeros, Primer_tablero).
 
 segura([Q|Qs]) :- no_ataca(Q, Qs), segura(Qs).
 segura([]).
