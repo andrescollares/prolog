@@ -47,7 +47,7 @@ hacer_movimiento(Estado, Y, Xi, Y, Xf, _, Estado2) :-
     oponente(Jugador, Oponente),
 
     Capturas = capturas(1),
-    capturar_izquierda(Xf, Y, Tablero, Jugador, Oponente, Capturas),
+    capturar_abajo(Xf, Y, Tablero, Jugador, Oponente, Capturas),
     arg(1, Capturas, 0), !,
     % \+ (ResCapturas = 1, Movimiento = con_captura),
 
@@ -100,7 +100,7 @@ hacer_movimiento(Estado, Yi, X, Yf, X, _, Estado2) :-
     oponente(Jugador, Oponente),
 
     Capturas = capturas(1),
-    capturar_izquierda(X, Yf, Tablero, Jugador, Oponente, Capturas),
+    capturar_abajo(X, Yf, Tablero, Jugador, Oponente, Capturas),
     arg(1, Capturas, 0), !,
     % \+ (ResCapturas = 1, Movimiento = con_captura),
 
@@ -215,6 +215,9 @@ capturar_derecha(X, Y, Tablero, Jugador, Oponente, Capturas) :-
 
     setarg(X1, Fila, -),
     setarg(1, Capturas, 0).
+
+
+
 
 capturar_derecha(_, _, _, _, _, _).
 
@@ -402,29 +405,45 @@ es_empate(Estado) :-
 % mejor_movimiento: dado un estado, un jugador, un nivel para minimax, y una estrategia, devuelve la mejor jugada posible
 % Estrategia es solamente un átomo que se le asigna para poder implementar más de una estrategia
 
-mejor_movimiento(+Estado,+Jugador,+NivelMinimax,+Estrategia,-Estado2).
-mejor_movimiento(Estado, Jugador, _, _, Estado2) :-
+% mejor_movimiento(+Estado,+Jugador,+NivelMinimax,+Estrategia,-Estado2).
+
+
+
+mejor_movimiento(Estado, Jugador, Nivel, ia_grupo, Estado) :-
+    % ?? ValidateInput ??
+    arg(6, Estado, Etapa),
+    Etapa == 1,
+    mejor_movimiento_etapa1(Estado, Jugador, Nivel),
+    mejor_movimiento_etapa1(Estado, Jugador, Nivel).
+
+
+
+mejor_movimiento(Estado, Jugador, _, _, Estado) :-
+    arg(6, Estado, Etapa),
+    Etapa == 2,
     gano(Estado, Jugador),
     oponente(Jugador, Oponente),
     gano(Estado, Oponente),
     es_empate(Estado).
 
-
-mejor_movimiento(Estado, Jugador, Nivel, ia_grupo, Estado2) :-
+mejor_movimiento(Estado, Jugador, Nivel, ia_grupo,  MejorJugada) :-
     % ?? ValidateInput ??
-    mejor_movimiento_step(Estado, Jugador, Jugador, Nivel, max, MejorMovimiento, _),
-    Estado2 == Estado.
+    arg(6, Estado, Etapa),
+    Etapa == 2,
+    mejor_movimiento_step(Estado, Jugador, Jugador, Nivel, max,  MejorJugada, _).
 
 
 mejor_movimiento_step(Estado, JugadorOriginal, Jugador, Nivel, MinMax, MejorJugada, MejorPuntaje) :-
     Nivel > 0,
     Nivel1 is Nivel - 1,
-    movimientos_posibles(Jugador, Estado, MovimientosPosibles).
-    mejor_jugada(MovimientosPosibles, JugadorOriginal, Jugador, MinMax, Nivel1, MejorJugada, MejorPuntaje).
+    movimientos_posibles(Jugador, Estado, MovimientosPosibles),
+    mejor_jugada(Nivel1, JugadorOriginal, Jugador, MinMax, MovimientosPosibles, MejorJugada, MejorPuntaje).
 
-mejor_movimiento_step(Estado, JugadorOriginal, Jugador, Nivel, MinMax, MejorJugada, MejorPuntaje) :-
-    valor_tablero(Nivel, Jugador, Estado, MejorPuntaje).
+mejor_movimiento_step(Estado, JugadorOriginal, _, Nivel, _, _, MejorPuntaje) :-
+    valor_tablero(Nivel, JugadorOriginal, Estado, MejorPuntaje).
 
+
+% ?- mejor_movimiento(estado(m(f(x, x, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -)), 0,0,0,0,1), x, 3, ia_grupo, BestMove).
 
 movimientos_posibles(Jugador, Estado, MovimientosPosibles) :-
     % findall(PosicionJugador, , PosicionesJugador).
@@ -498,13 +517,16 @@ valor_tablero(_, Jugador, Estado, -1000) :-
     oponente(Jugador, Oponente),
     gano(Estado, Oponente).
 
+valor_tablero(_, _, Estado, 0) :-
+    es_empate(Estado).
+
 valor_tablero(_, Jugador, Estado, Valor) :-
     Suma = suma(0),
     contar_fichas(Estado, Jugador, Suma),
-    Valor == Suma.
+    arg(1, Suma, Res),
+    Valor = Res.
 
-valor_tablero(_, Jugador, Estado, 0) :-
-    es_empate(Estado).
+
 
 
 contar_fichas(Estado, Jugador, Suma) :-
@@ -532,7 +554,70 @@ valor_ficha(X, X, 1) :- !.
 
 valor_ficha(_, _, -1).
     
+%% estado(m(f(x, o, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -)), 0,0,0,0,2)
+%% valor_tablero(1, x, estado(m(f(x, o, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -)), 0,0,0,0,2), Valor)
+
+
+%hacer_movimiento(estado(m(f(x, -, -, x, -), f(-, -, -, -, -), f(o, -, -, -, -), f(x, -, -, -, -), f(-, -, -, -, -)), 0,0,0,0,2), 1, 1, 2, 1, normal, Estado2)
+% mejor_movimiento(estado(m(f(x, -, -, x, -), f(-, -, -, -, -), f(o, -, -, -, -), f(x, -, -, -, -), f(-, -, -, -, -)), 0,0,0,0,2), x, 2, ia_grupo, BestMove).
+
     
+mejor_jugada(Nivel, JugadorOriginal, Jugador, MinMax, [Jugada| RestoJugadas], MejorJugada, MejorPuntaje) :-
+    valor_tablero(Nivel, JugadorOriginal, Jugada, Puntaje),
+    mejor_jugada(Nivel, JugadorOriginal, Jugador, MinMax, RestoJugadas, MejorJugadaActual, MejorPuntajeActual),
+    compararJugadas(MinMax, Jugada, Puntaje, MejorJugadaActual, MejorPuntajeActual, MejorJugada, MejorPuntaje).
+    
+mejor_jugada(Nivel, JugadorOriginal, Jugador, MinMax, [Jugada| RestoJugadas], MejorJugada, MejorPuntaje) :-
+    mejor_jugada(Nivel, JugadorOriginal, Jugador, MinMax, RestoJugadas, MejorJugadaActual, MejorPuntajeActual),
+    oponente(Jugador, Oponente),
+    cambiarMinMax(MinMax, OtroMinMax),    
+    mejor_movimiento_step(Jugada, JugadorOriginal, Oponente, Nivel, OtroMinMax, _, MejorPuntajeHoja),
+    compararJugadas(MinMax, Jugada, MejorPuntajeHoja, MejorJugadaActual, MejorPuntajeActual, MejorJugada, MejorPuntaje).
 
 
 
+mejor_jugada(_, _, _, max, [], [], -12).
+
+mejor_jugada(_, _, _, min, [], [], 12).
+
+
+compararJugadas(max, Jugada1, Puntaje1, _, Puntaje2, Jugada1, Puntaje1):-
+        Puntaje1 >= Puntaje2, !.
+
+compararJugadas(max, _, Puntaje1, Jugada2, Puntaje2, Jugada2, Puntaje2):-
+        Puntaje1 < Puntaje2, !.
+
+
+compararJugadas(min, Jugada1, Puntaje1, _, Puntaje2, Jugada1, Puntaje1):-
+        Puntaje1 =< Puntaje2, !.
+
+
+compararJugadas(min, _, Puntaje1, Jugada2, Puntaje2, Jugada2, Puntaje2):-
+        Puntaje1 > Puntaje2, !.
+
+
+
+
+%cambiarMinMax(+MinMax, -otroMinMax)
+cambiarMinMax(min,max).
+cambiarMinMax(max,min).
+
+
+
+mejor_movimiento_etapa1(Estado, Jugador, _) :-
+    arg(1, Estado, Tablero),
+    between(1, 5, Y),
+        arg(Y, Tablero, Fila),
+        
+        between(1, 5, X),
+        \+ (X == 3,Y == 3),
+
+        arg(X, Fila, -),
+        setarg(X, Fila, Jugador).
+        
+
+
+
+    
+   
+    
