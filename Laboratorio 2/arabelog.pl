@@ -47,7 +47,7 @@ hacer_movimiento(Estado, Y, Xi, Y, Xf, _, Estado2) :-
     oponente(Jugador, Oponente),
 
     Capturas = capturas(1),
-    capturar_fichas(Xf, Y, Tablero, Jugador, Oponente, Capturas),
+    capturar_izquierda(Xf, Y, Tablero, Jugador, Oponente, Capturas),
     arg(1, Capturas, 0), !,
     % \+ (ResCapturas = 1, Movimiento = con_captura),
 
@@ -100,7 +100,7 @@ hacer_movimiento(Estado, Yi, X, Yf, X, _, Estado2) :-
     oponente(Jugador, Oponente),
 
     Capturas = capturas(1),
-    capturar_fichas(X, Yf, Tablero, Jugador, Oponente, Capturas),
+    capturar_izquierda(X, Yf, Tablero, Jugador, Oponente, Capturas),
     arg(1, Capturas, 0), !,
     % \+ (ResCapturas = 1, Movimiento = con_captura),
 
@@ -139,41 +139,49 @@ hacer_movimiento(Estado, Yi, X, Yf, X, Movimiento, Estado2) :-
 
     Estado2 = Estado.
 
-% captura hacia la izquierda
-capturar_fichas(X, Y, Tablero, Jugador, Oponente, Capturas) :-
+% captura hacia abajo
+capturar_abajo(X, Y, Tablero, Jugador, Oponente, Capturas) :-
+    Y < 4,
+    \+ (X == 3,Y == 2),
+
+    Y1 is Y + 1,
+    arg(Y1, Tablero, Fila1),
+    arg(X, Fila1, Oponente),
+
+    Y2 is Y + 2,
+    arg(Y2, Tablero, Fila2),
+    arg(X, Fila2, Jugador), !,
+
+    setarg(X, Fila1, -),
+    setarg(1, Capturas, 0),
+    
+    capturar_izquierda(X, Y, Tablero, Jugador, Oponente, Capturas).
+
+capturar_abajo(X, Y, Tablero, Jugador, Oponente, Capturas) :-
+    capturar_izquierda(X, Y, Tablero, Jugador, Oponente, Capturas).
+
+
+capturar_izquierda(X, Y, Tablero, Jugador, Oponente, Capturas) :-
     X > 2,
     \+ (X == 4,Y == 3),
     arg(Y, Tablero, Fila),
 
     X1 is X - 1,
     arg(X1, Fila, Oponente),
-    
+
     X2 is X - 2,
-    arg(X2, Fila, Jugador),
+    arg(X2, Fila, Jugador), !,
 
-    nb_setarg(X1, Fila, -),
-    nb_setarg(1, Capturas, 0),
-    fail.
+    setarg(X1, Fila, -),
+    setarg(1, Capturas, 0),
 
-% captura hacia la derecha
-capturar_fichas(X, Y, Tablero, Jugador, Oponente, Capturas) :-
-    X < 4,
-    \+ (X == 2,Y == 3),
+    capturar_arriba(X, Y, Tablero, Jugador, Oponente, Capturas).
 
-    arg(Y, Tablero, Fila),
+capturar_izquierda(X, Y, Tablero, Jugador, Oponente, Capturas) :-
+    capturar_arriba(X, Y, Tablero, Jugador, Oponente, Capturas).
 
-    X1 is X + 1,
-    arg(X1, Fila, Oponente),
-    
-    X2 is X + 2,
-    arg(X2, Fila, Jugador),
 
-    nb_setarg(X1, Fila, -),
-    nb_setarg(1, Capturas, 0),
-    fail.
-
-% captura hacia arriba
-capturar_fichas(X, Y, Tablero, Jugador, Oponente, Capturas) :-
+capturar_arriba(X, Y, Tablero, Jugador, Oponente, Capturas) :-
     Y > 2,
     \+ (X == 3,Y == 4),
 
@@ -183,30 +191,33 @@ capturar_fichas(X, Y, Tablero, Jugador, Oponente, Capturas) :-
     
     Y2 is Y - 2,
     arg(Y2, Tablero, Fila2),
-    arg(X, Fila2, Jugador),
+    arg(X, Fila2, Jugador), !,
 
-    nb_setarg(X, Fila1, -),
-    nb_setarg(1, Capturas, 0),
-    fail.
+    setarg(X, Fila1, -),
+    setarg(1, Capturas, 0),
 
-% captura hacia abajo
-capturar_fichas(X, Y, Tablero, Jugador, Oponente, Capturas) :-
-    Y < 4,
-    \+ (X == 3,Y == 2),
+    capturar_derecha(X, Y, Tablero, Jugador, Oponente, Capturas).
 
-    Y1 is Y + 1,
-    arg(Y1, Tablero, Fila1),
-    arg(X, Fila1, Oponente),
+capturar_arriba(X, Y, Tablero, Jugador, Oponente, Capturas) :-
+    capturar_derecha(X, Y, Tablero, Jugador, Oponente, Capturas).
+
+capturar_derecha(X, Y, Tablero, Jugador, Oponente, Capturas) :-
+    X < 4,
+    \+ (X == 2,Y == 3),
+
+    arg(Y, Tablero, Fila),
+
+    X1 is X + 1,
+    arg(X1, Fila, Oponente),
     
-    Y2 is Y + 2,
-    arg(Y2, Tablero, Fila2),
-    arg(X, Fila2, Jugador),
+    X2 is X + 2,
+    arg(X2, Fila, Jugador), !,
 
-    nb_setarg(X, Fila1, -),
-    nb_setarg(1, Capturas, 0),
-    fail.
+    setarg(X1, Fila, -),
+    setarg(1, Capturas, 0).
 
-capturar_fichas(_, _, _, _, _, _).
+capturar_derecha(_, _, _, _, _, _).
+
 
 % captura hacia la izquierda
 hay_captura_ficha(X, Y, Tablero, Jugador, Oponente) :-
