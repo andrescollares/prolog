@@ -189,8 +189,6 @@ mejor_jugada(_, _, _,Alpha, _, [], Jugada, Jugada, Alpha).
 %Evalúa la jugada implementando alpha beta pruning.
 %cortar(+Nivel, +JugadorOriginal, +Jugador, +Alpha, +Beta, +Jugada, +RestoJugadas, +JugadaAux, -MejorJugadaActual, -MejorPuntajeActual, +MejorPuntajeHoja).
 cortar(_, _, _, _, Beta, Jugada, _, _, Jugada, MejorPuntajeHoja, MejorPuntajeHoja) :-
-    % print(Jugada),
-    % print(MejorPuntajeHoja), write('\n'),
     MejorPuntajeHoja >= Beta, !.
 
 cortar(Nivel, JugadorOriginal, Jugador, Alpha, Beta, Jugada, RestoJugadas, _, MejorJugadaActual, MejorPuntajeActual, MejorPuntajeHoja) :-
