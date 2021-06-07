@@ -6,23 +6,15 @@ f(_,_,_,_,_).
 
 m(f(_,_,_,_,_),f(_,_,_,_,_),f(_,_,_,_,_),f(_,_,_,_,_),f(_,_,_,_,_),_,_,_,_,_).
 
-%Ejemplo de estado
-%estado(m(f(-,-,-,-,-),f(-,-,o,x,-),f(-,-,o,x,-),f(x,o,o,x,-),f(x,x,-,-,o)),0,0,3,5,2).
-
-/*
-6 parametros del estado:
-1- Tablero
-2 y 3- el número de turnos seguidos sin movimiento de ambos jugadores (x primero?)
-4 y 5- el número de jugadas sin capturar de ambos jugadores
-6- la fase en la que se está jugando (1 indica que se están insertando fichas, y 2 que se están moviendo)
-*/
-
+%oponente(+Jugador, -Oponente): Dada una ficha del jugador, retorna cual es la ficha del oponente.
 oponente(o, x).
 oponente(x, o).
 
+%indice_jugador(+Jugador, -Indice): Dado un Jugador retorna si le corresponde el primer o el segundo atributo del estado.
 indice_jugador(x, 0).
 indice_jugador(o, 1).
 
+%gano(+Estado, +Jugador): Retorna si el Jugador gana en el Estado.
 gano(Estado, Jugador) :-
     oponente(Jugador, Oponente),
     indice_jugador(Oponente, Indice),
@@ -35,8 +27,10 @@ gano(Estado, Jugador) :-
     arg(1, Estado, Tablero),
     hay_ficha(Tablero, Oponente), !,
     fail.
+
 gano(_, _).
 
+%hay_ficha(+Tablero, +Oponente): Retorna si existe alguna ficha del Oponente en el Tablero. 
 hay_ficha(Tablero, Oponente) :-
 
     between(1, 5, Y),
@@ -45,12 +39,15 @@ hay_ficha(Tablero, Oponente) :-
     between(1, 5, X),
     arg(X, Fila, Oponente).
 
+%es_empate(+Estado): Retorna si el Estado corresponde a un empate
 es_empate(Estado) :-
     arg(4, Estado, XSinCapturar),
     arg(5, Estado, OSinCapturar),
     XSinCapturar >= 12,
     OSinCapturar >= 12.
 
+%Devuelve la cantidad de capturas posibles del Jugador sobre el Oponente basado en la definición de posibles capturas. 
+%numero_de_posibles_capturas(+Estado, +Jugador, +Oponente, -Cantidad). 
 numero_de_posibles_capturas(Estado, Jugador, Oponente, Cantidad) :-
     arg(1, Estado, Tablero),
 
@@ -64,6 +61,11 @@ numero_de_posibles_capturas(Estado, Jugador, Oponente, Cantidad) :-
 
 numero_de_posibles_capturas(_, _, _, _).
 
+%Evalúa el valor de un Estado, si se juega la primer etapa, entonces devuelve la cantidad de capturas de Jugador menos 
+%la cantidad de capturas de su Oponente, en caso que sea un tablero donde Jugador gana retorna 1000, 
+%si Oponente gana retorna -1000, si es empate 0 y en otro caso retorna la cantidad de fichas de Jugador menos 
+%la cantidad de fichas de su oponente mas las jugadas sin movimiento que lleva el Oponente menos la cantidad de jugadas sin movimiento que lleva el Jugador.
+%tablero_final(?Nivel, +Jugador, +Estado, -Valor). 
 tablero_final(0, Jugador, Estado, Valor) :-
     arg(6, Estado, 1), !,
     oponente(Jugador, Oponente),
@@ -106,6 +108,7 @@ tablero_final(_, Jugador, Estado, -1000) :-
 tablero_final(_, _, Estado, 0) :-
     es_empate(Estado).
 
+%contar_fichas(+Estado, +Jugador, -Suma): Retorna la cantidad de fichas de Jugador menos la cantidad de fichas de su oponente que hay en el tablero.
 contar_fichas(Estado, Jugador, Suma) :-
     arg(1, Estado, Tablero),
 
@@ -125,26 +128,10 @@ contar_fichas(Estado, Jugador, Suma) :-
 
 contar_fichas(_, _, _).
 
+%valor_ficha(+Ficha, +Jugador, -Valor): Retorna el valor de una ficha basado en si la ficha es una ficha del jugador, una ficha de su oponente o si es un lugar vacío.
 valor_ficha(-, _, 0) :- !.
 valor_ficha(X, X, 1) :- !.
 valor_ficha(_, _, -1).
-
-% comparar_jugadas(max, Jugada1, Puntaje1, _, Puntaje2, Jugada1, Puntaje1):-
-%         Puntaje1 >= Puntaje2, !.
-
-% comparar_jugadas(max, _, Puntaje1, Jugada2, Puntaje2, Jugada2, Puntaje2):-
-%         Puntaje1 < Puntaje2, !.
-
-% comparar_jugadas(min, Jugada1, Puntaje1, _, Puntaje2, Jugada1, Puntaje1):-
-%         Puntaje1 =< Puntaje2, !.
-
-% comparar_jugadas(min, _, Puntaje1, Jugada2, Puntaje2, Jugada2, Puntaje2):-
-%         Puntaje1 > Puntaje2, !.
-
-
-%cambiarMinMax(+MinMax, -otroMinMax)
-% cambiarMinMax(min,max).
-% cambiarMinMax(max,min).
 
 
 % mejor_movimiento: dado un estado, un jugador, un nivel para minimax, y una estrategia, devuelve la mejor jugada posible
@@ -162,12 +149,10 @@ mejor_movimiento(Estado, Jugador, _, _, Estado) :-
     es_empate(Estado).
 
 mejor_movimiento(Estado, Jugador, Nivel, ia_grupo,  MejorJugada) :-
-    % ?? ValidateInput ??
-    % arg(6, Estado, 2),
     mejor_movimiento_step(Estado, Jugador, Jugador, Nivel, -10000, 10000,  MejorJugada, _).
 
 
-%MEJOR MOVIMIENTO STEP
+%mejor_movimiento_step(+Estado, +JugadorOriginal, +Jugador, +Nivel, +Alpha, +Beta, ?MejorJugada, -MejorPuntaje): 
 mejor_movimiento_step(Estado, JugadorOriginal, Jugador, Nivel, Alpha, Beta, MejorJugada, MejorPuntaje) :-
     Nivel > 0, !,
     Nivel1 is Nivel - 1,
@@ -180,8 +165,11 @@ mejor_movimiento_step(Estado, JugadorOriginal, _, _, _, _, _, MejorPuntaje) :-
     tablero_final(0, JugadorOriginal, Estado, MejorPuntaje).
 
 
-% MEJOR JUGADA
+%Selecciona la MejorJugada entre Jugadas aplicando aplha beta pruning, en caso que Jugadas sea vacío (caso base) 
+%entonces retorna como mejor jugada la mejor jugada hasta el momento (JugadaAux).
+%mejor_jugada(+Nivel, +JugadorOriginal, +Jugador, +Alpha, +Beta, +Jugadas, +JugadaAux, -MejorJugada, -MejorPuntaje).
 mejor_jugada(Nivel, JugadorOriginal, Jugador, Alpha, Beta, [Jugada| RestoJugadas], JugadaAux, MejorJugada, MejorPuntaje) :-
+    %solo en el caso en que estemos en la segunda etapa de juego reviso si el tablero es final.
     arg(6, Jugada, 2),
     tablero_final(Nivel, Jugador, Jugada, Puntaje), 
 
@@ -195,11 +183,11 @@ mejor_jugada(Nivel, JugadorOriginal, Jugador, Alpha, Beta, [Jugada| RestoJugadas
     MejorPuntajeHoja1 is -MejorPuntajeHoja,
     cortar(Nivel, JugadorOriginal, Jugador, Alpha, Beta, Jugada, RestoJugadas, JugadaAux, MejorJugada, MejorPuntaje, MejorPuntajeHoja1).
 
-mejor_jugada(Nivel, _, _,Alpha, _, [], Jugada, Jugada, Alpha).
-    % print(Nivel),write(' mejor_jugada2: '),print(Jugada),print(Alpha),write('\n').
+mejor_jugada(_, _, _,Alpha, _, [], Jugada, Jugada, Alpha).
 
-% mejor_jugada(_, _, _, _, Beta, [], Jugada, Jugada, Beta).
 
+%Evalúa la jugada implementando alpha beta pruning.
+%cortar(+Nivel, +JugadorOriginal, +Jugador, +Alpha, +Beta, +Jugada, +RestoJugadas, +JugadaAux, -MejorJugadaActual, -MejorPuntajeActual, +MejorPuntajeHoja).
 cortar(_, _, _, _, Beta, Jugada, _, _, Jugada, MejorPuntajeHoja, MejorPuntajeHoja) :-
     % print(Jugada),
     % print(MejorPuntajeHoja), write('\n'),
@@ -214,7 +202,9 @@ cortar(Nivel, JugadorOriginal, Jugador, Alpha, Beta, _, RestoJugadas, JugadaAux,
     mejor_jugada(Nivel, JugadorOriginal, Jugador, Alpha, Beta, RestoJugadas, JugadaAux, MejorJugadaActual, MejorPuntajeActual).
 
 
-%MOVIMIENTOS POSIBLES
+%Retorna todos los movimientos posibles que puede hacer Jugador desde Estado, tomando en cuenta la etapa del juego, 
+%en caso que se esté jugando la primera etapa pero no queden movimientos, se pasa a la segunda etapa.
+%movimientos_posibles(+Jugador, +Estado, -MovimientosPosibles).
 movimientos_posibles(Jugador, Estado, MovimientosPosibles) :-
     arg(6, Estado, 1),
     findall(NuevoEstado, hacer_movimiento_jugador_etapa1(Estado, Jugador, NuevoEstado), MovimientosPosibles),
@@ -229,6 +219,7 @@ movimientos_posibles(Jugador, Estado, MovimientosPosibles) :-
 movimientos_posibles(Jugador, Estado, MovimientosPosibles) :-
     findall(NuevoEstado, hacer_movimiento_jugador(Estado, Jugador, normal, NuevoEstado), MovimientosPosibles).
 
+%hacer_movimiento_jugador_etapa1(+Estado, +Jugador, -NuevoEstado): Coloca dos piezas de Jugador en el tablero de Estado y devuelve el resultado.
 hacer_movimiento_jugador_etapa1(Estado, Jugador, NuevoEstado) :-
     arg(1, Estado, Tablero),
 
@@ -254,7 +245,9 @@ hacer_movimiento_jugador_etapa1(Estado, Jugador, NuevoEstado) :-
 
     NuevoEstado = Estado.
         
-%MOVIMIENTO JUGADOR
+%Realiza un movimiento legal de Jugador partiendo desde Estado, en caso que no haya movimientos posibles
+%se actualiza el valor del atributo en Estado, si hubo captura permite volver a jugar.
+%hacer_movimiento_jugador(+Estado, +Jugador, +TipoMovimiento, -NuevoEstado). 
 hacer_movimiento_jugador(Estado, Jugador, normal, NuevoEstado) :-
     \+ hay_movimiento(Estado, Jugador), !,
 
@@ -280,15 +273,11 @@ hacer_movimiento_jugador(Estado, Jugador, TipoMovimiento, NuevoEstado) :-
     arg(X, Fila, Jugador),
 
     X1 is X - 1,
-    %X1 > 0,
     X2 is X + 1,
-    %X2 > 0,
     between(X1, X2, Xf),
     
     Y1 is Y - 1,
-    %Y1 > 0,
     Y2 is Y + 1,
-    %Y2 < 6,
     between(Y1, Y2, Yf),
 
     hacer_movimiento(Estado, Y ,X, Yf, Xf, TipoMovimiento, NuevoEstado),
@@ -311,15 +300,11 @@ hacer_movimiento_jugador(Estado, Jugador, TipoMovimiento, NuevoEstado) :-
     arg(X, Fila, Jugador),
 
     X1 is X - 1,
-    % % X1 > 0,
     X2 is X + 1,
-    % X2 < 6,
     between(X1, X2, Xf),
     
     Y1 is Y - 1,
-    % Y1 > 0,
     Y2 is Y + 1,
-    % Y2 < 6,
     between(Y1, Y2, Yf),
 
     hacer_movimiento(Estado, Y ,X, Yf, Xf, TipoMovimiento, NuevoEstado).
@@ -346,8 +331,8 @@ hacer_movimiento(Estado, Y, Xi, Y, Xf, _, Estado2) :-
 
     Capturas = capturas(1),
     capturar_abajo(Xf, Y, Tablero, Jugador, Oponente, Capturas),
+    %capturar_abajo retorna 0 si hubo al menos una captura.
     arg(1, Capturas, 0), !,
-    % \+ (ResCapturas = 1, Movimiento = con_captura),
 
     setarg(Xi, FilaI, -),
     setarg(Xf, FilaF, Jugador),
@@ -355,6 +340,7 @@ hacer_movimiento(Estado, Y, Xi, Y, Xf, _, Estado2) :-
     indice_jugador(Jugador, IndiceJugador),
     IndiceCapturas is 4 + IndiceJugador,
 
+    %si hubo captura entonces se debe actualizar la cantidad de movimientos sin captura
     setarg(IndiceCapturas, Estado, 0),
     
     Estado2 = Estado.
@@ -379,6 +365,8 @@ hacer_movimiento(Estado, Y, Xi, Y, Xf, Movimiento, Estado2) :-
 
     arg(IndiceCapturas, Estado, Cap),
     CapActualizado is Cap + 1,
+
+    %si no capturo entonces aumenta en uno la cantidad de jugadas sin capturar
     setarg(IndiceCapturas, Estado, CapActualizado),
     
     Estado2 = Estado.
@@ -399,8 +387,8 @@ hacer_movimiento(Estado, Yi, X, Yf, X, _, Estado2) :-
 
     Capturas = capturas(1),
     capturar_abajo(X, Yf, Tablero, Jugador, Oponente, Capturas),
+    %capturar_abajo retorna 0 si hubo al menos una captura.
     arg(1, Capturas, 0), !,
-    % \+ (ResCapturas = 1, Movimiento = con_captura),
 
     setarg(X, FilaI, -),
     setarg(X, FilaF, Jugador),
@@ -408,6 +396,7 @@ hacer_movimiento(Estado, Yi, X, Yf, X, _, Estado2) :-
     indice_jugador(Jugador, IndiceJugador),
     IndiceCapturas is 4 + IndiceJugador,
 
+    %si hubo captura entonces se debe actualizar la cantidad de movimientos sin captura
     setarg(IndiceCapturas, Estado, 0),
 
     Estado2 = Estado.
@@ -433,11 +422,13 @@ hacer_movimiento(Estado, Yi, X, Yf, X, Movimiento, Estado2) :-
     arg(IndiceCapturas, Estado, Cap),
     CapActualizado is Cap + 1,
 
+    %si no capturo entonces aumenta en uno la cantidad de jugadas sin capturar
     setarg(IndiceCapturas, Estado, CapActualizado),
 
     Estado2 = Estado.
 
-% captura hacia abajo
+%Revisa si hay una posible captura hacia abajo y la realiza en caso de que así sea, luego llama capturar_izquierda (aún cuando no hubo captura).
+%capturar_abajo(+X, +Y, +Tablero, +Jugador, +Oponente, +Capturas).
 capturar_abajo(X, Y, Tablero, Jugador, Oponente, Capturas) :-
     Y < 4,
     \+ (X == 3,Y == 2),
@@ -459,6 +450,8 @@ capturar_abajo(X, Y, Tablero, Jugador, Oponente, Capturas) :-
     capturar_izquierda(X, Y, Tablero, Jugador, Oponente, Capturas).
 
 
+%Revisa si hay una posible captura hacia la izquierda y la realiza en caso de que así sea, luego llama capturar_arriba (aún cuando no hubo captura).
+%capturar_izquierda(+X, +Y, +Tablero, +Jugador, +Oponente, +Capturas). 
 capturar_izquierda(X, Y, Tablero, Jugador, Oponente, Capturas) :-
     X > 2,
     \+ (X == 4,Y == 3),
@@ -479,6 +472,8 @@ capturar_izquierda(X, Y, Tablero, Jugador, Oponente, Capturas) :-
     capturar_arriba(X, Y, Tablero, Jugador, Oponente, Capturas).
 
 
+%Revisa si hay una posible captura hacia arriba y la realiza en caso de que así sea, luego llama capturar_derecha (aún cuando no hubo captura).
+%capturar_arriba(+X, +Y, +Tablero, +Jugador, +Oponente, +Capturas). 
 capturar_arriba(X, Y, Tablero, Jugador, Oponente, Capturas) :-
     Y > 2,
     \+ (X == 3,Y == 4),
@@ -499,6 +494,9 @@ capturar_arriba(X, Y, Tablero, Jugador, Oponente, Capturas) :-
 capturar_arriba(X, Y, Tablero, Jugador, Oponente, Capturas) :-
     capturar_derecha(X, Y, Tablero, Jugador, Oponente, Capturas).
 
+
+%Revisa si hay una posible captura hacia la derecha y la realiza en caso de que así sea, siempre retorna verdadero.
+%capturar_derecha(+X, +Y, +Tablero, +Jugador, +Oponente, +Capturas). 
 capturar_derecha(X, Y, Tablero, Jugador, Oponente, Capturas) :-
     X < 4,
     \+ (X == 2,Y == 3),
@@ -517,20 +515,21 @@ capturar_derecha(X, Y, Tablero, Jugador, Oponente, Capturas) :-
 capturar_derecha(_, _, _, _, _, _).
 
 
-%HAY POSIBLE CAPTURA
+%hay_posible_captura(+Estado, +Jugador): Retorna verdadero si existe algun movimiento con captura para el Jugador.
 hay_posible_captura(Estado, Jugador) :- 
-    oponente(Jugador, Oponente),
     arg(1, Estado, Tablero),
     between(1, 5, Y),
     arg(Y, Tablero, Fila), 
 
     between(1, 5, X),
-    arg(X, Fila, Jugador_Aux),
+    arg(X, Fila, Jugador),
 
-    Jugador == Jugador_Aux,
+    oponente(Jugador, Oponente),
     
     hay_mov_cap_ficha(X, Y, Tablero, Jugador, Oponente).
 
+%Retorna verdadero si hay un movimiento posible hacia la izquierda, derecha, arriba y abajo respectivamente del Jugador en la posición X Y.
+%hay_mov_cap_ficha(+X, +Y, +Tablero, +Jugador, +Oponente). 
 hay_mov_cap_ficha(X, Y, Tablero, Jugador, Oponente) :-
     X > 1,
     X1 is X - 1,
@@ -564,6 +563,7 @@ hay_mov_cap_ficha(X, Y, Tablero, Jugador, Oponente) :-
 
     hay_captura_ficha(X, Y1, Tablero, Jugador, Oponente).
 
+%hay_captura_ficha(+X, +Y, +Tablero, +Jugador, +Oponente): Retorna verdadero si hay una captura por parte del Jugador desde la posición X Y en el Tablero.
 % captura hacia la izquierda
 hay_captura_ficha(X, Y, Tablero, Jugador, Oponente) :-
     X > 2,
@@ -616,9 +616,22 @@ hay_captura_ficha(X, Y, Tablero, Jugador, Oponente) :-
     arg(X, Fila2, Jugador).
 
 
-% hay_movimiento: es exitoso si hay algún movimient posible para el jugador
+% hay_movimiento: es exitoso si hay algún movimiento posible para el jugador
 % hay_movimiento(+Estado,+Jugador).
+hay_movimiento(Estado, Jugador) :- 
+    % member(N, [1,2,3,4,5]), 
+    arg(1, Estado, Tablero),
+    between(1, 5, Y),
+    arg(Y, Tablero, Fila), 
 
+    between(1, 5, X),
+    arg(X, Fila, Jugador_Aux),
+
+    Jugador == Jugador_Aux,
+    hay_movimiento_ficha(X, Y, Tablero).
+
+
+%hay_movimiento_ficha(+X, +Y, Tablero): es exitoso si hay algun movimiento posible para la ficha que se encuentra en el lugar X Y del Tablero.
 hay_movimiento_ficha(X, Y, Tablero) :-
     X > 1,
     X1 is X - 1,
@@ -644,31 +657,14 @@ hay_movimiento_ficha(X, Y, Tablero) :-
     arg(X, Fila, -).
 
 
-hay_movimiento(Estado, Jugador) :- 
-    % member(N, [1,2,3,4,5]), 
-    arg(1, Estado, Tablero),
-    between(1, 5, Y),
-    arg(Y, Tablero, Fila), 
-
-    between(1, 5, X),
-    arg(X, Fila, Jugador_Aux),
-
-    Jugador == Jugador_Aux,
-    hay_movimiento_ficha(X, Y, Tablero).
-
-
-mejor_movimiento_etapa1(Estado, Jugador, _) :-
-    arg(1, Estado, Tablero),
-    between(1, 5, Y),
-        arg(Y, Tablero, Fila),
-        
-        between(1, 5, X),
-        \+ (X == 3,Y == 3),
-
-        arg(X, Fila, -),
-        setarg(X, Fila, Jugador).
-
-
+%Retorna el número de capturas posibles en un futuro, se utiliza para la etapa uno y suma uno por cada captura posible a futuro. 
+%ej: 
+%x o * x es una posible captura
+%x
+%o
+%* x
+%es una posible captura
+%posibles_capturas(+X, +Y, +Tablero, +Jugador, +Oponente, +Capturas): 
 posibles_capturas(X, Y, Tablero, Jugador, Oponente, Capturas) :-
     % Captura hacia la derecha simple
     X3 is X + 3,
