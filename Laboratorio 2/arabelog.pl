@@ -83,15 +83,18 @@ tablero_final(0, Jugador, Estado, Valor) :-
     Suma = suma(0),
     contar_fichas(Estado, Jugador, Suma),
 
-    oponente(Jugador, Oponente),
-
     arg(1, Suma, Res),
 
-    indice_jugador(Oponente, Indice),
-    IndiceOp is 2 + Indice,
-    arg(IndiceOp, Estado, JugSinMovimientosOponente),
+    indice_jugador(Jugador, IndiceJ),
+    IndiceJug is 2 + IndiceJ,
+    arg(IndiceJug, Estado, JugSinMovJugador),
 
-    Valor is Res + JugSinMovimientosOponente.
+    oponente(Jugador, Oponente),
+    indice_jugador(Oponente, IndiceO),
+    IndiceOp is 2 + IndiceO,
+    arg(IndiceOp, Estado, JugSinMovOponente),
+
+    Valor is Res + JugSinMovOponente - JugSinMovJugador.
 
 tablero_final(_, Jugador, Estado, 1000) :-
     gano(Estado, Jugador).
@@ -113,7 +116,6 @@ contar_fichas(Estado, Jugador, Suma) :-
     arg(X, Fila, Ficha),
     
     valor_ficha(Ficha, Jugador, Valor),
-
     
     arg(1, Suma, Res),
     ResActualizado is Res + Valor,
@@ -168,9 +170,9 @@ mejor_movimiento(Estado, Jugador, Nivel, ia_grupo,  MejorJugada) :-
 %MEJOR MOVIMIENTO STEP
 mejor_movimiento_step(Estado, JugadorOriginal, Jugador, Nivel, Alpha, Beta, MejorJugada, MejorPuntaje) :-
     Nivel > 0, !,
-    Alpha1 is -Beta,
-    Beta1 is -Alpha,
     Nivel1 is Nivel - 1,
+    Alpha1 is - Beta,
+    Beta1 is - Alpha,
     movimientos_posibles(Jugador, Estado, MovimientosPosibles),
     mejor_jugada(Nivel1, JugadorOriginal, Jugador, Alpha1, Beta1, MovimientosPosibles, nil, MejorJugada, MejorPuntaje).
     
@@ -180,7 +182,8 @@ mejor_movimiento_step(Estado, JugadorOriginal, _, _, _, _, _, MejorPuntaje) :-
 
 % MEJOR JUGADA
 mejor_jugada(Nivel, JugadorOriginal, Jugador, Alpha, Beta, [Jugada| RestoJugadas], JugadaAux, MejorJugada, MejorPuntaje) :-
-    tablero_final(Nivel, JugadorOriginal, Jugada, Puntaje),
+    arg(6, Jugada, 2),
+    tablero_final(Nivel, Jugador, Jugada, Puntaje), 
 
     cortar(Nivel, JugadorOriginal, Jugador, Alpha, Beta, Jugada, RestoJugadas, JugadaAux, MejorJugada, MejorPuntaje, Puntaje).
     
@@ -188,14 +191,12 @@ mejor_jugada(Nivel, JugadorOriginal, Jugador, Alpha, Beta, [Jugada| RestoJugadas
 
     oponente(Jugador, Oponente),
     mejor_movimiento_step(Jugada, JugadorOriginal, Oponente, Nivel, Alpha, Beta, _, MejorPuntajeHoja),
+
     MejorPuntajeHoja1 is -MejorPuntajeHoja,
     cortar(Nivel, JugadorOriginal, Jugador, Alpha, Beta, Jugada, RestoJugadas, JugadaAux, MejorJugada, MejorPuntaje, MejorPuntajeHoja1).
 
-% mejor_jugada(_, _, _, Alpha, [], [], -2000).
-
-% mejor_jugada(_, _, _, min, [], [], 2000).
-
-mejor_jugada(_, _, _,Alpha, _, [], Jugada, Jugada, Alpha).
+mejor_jugada(Nivel, _, _,Alpha, _, [], Jugada, Jugada, Alpha).
+    % print(Nivel),write(' mejor_jugada2: '),print(Jugada),print(Alpha),write('\n').
 
 % mejor_jugada(_, _, _, _, Beta, [], Jugada, Jugada, Beta).
 
@@ -866,9 +867,6 @@ posibles_capturas(X, Y, Tablero, Jugador, Oponente, Capturas) :-
     nb_setarg(1, Capturas, SumaAct),
     fail.
 
-% posibles_capturas(_, _, _, _, _, _).
+posibles_capturas(_, _, _, _, _, _).
 
 
-%%numero_de_posibles_capturas(estado(m(f(x, -, o, x, -), f(-, -, -, -, -), f(-, o, x, -, -), f(o, -, -, -, -), f(x, -, -, -, -), 0, 0, 0, 0, 1)), x, o, cap(0)).
-%%findall(NuevoEstado, hacer_movimiento_jugador_etapa1(estado(m(f(o, o, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), 0, 0, 0, 0, 1)), x, NuevoEstado), MovimientosPosibles).
-%%estado(m(f(x, -, o, x, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), f(-, -, -, -, -), 0, 0, 0, 0, 1))
