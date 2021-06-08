@@ -172,6 +172,7 @@ mejor_movimiento_step(Estado, JugadorOriginal, _, _, _, _, _, MejorPuntaje) :-
 %mejor_jugada(+Nivel, +JugadorOriginal, +Jugador, +Alpha, +Beta, +Jugadas, +JugadaAux, -MejorJugada, -MejorPuntaje).
 mejor_jugada(Nivel, JugadorOriginal, Jugador, Alpha, Beta, [Jugada| RestoJugadas], JugadaAux, MejorJugada, MejorPuntaje) :-
     %solo en el caso en que estemos en la segunda etapa de juego reviso si el tablero es final.
+    %if node is a terminal node return the heuristic value of node.
     arg(6, Jugada, 2),
     tablero_final(Nivel, Jugador, Jugada, Puntaje), 
 
@@ -185,7 +186,6 @@ mejor_jugada(Nivel, JugadorOriginal, Jugador, Alpha, Beta, [Jugada| RestoJugadas
     MejorPuntajeHoja1 is -MejorPuntajeHoja,
     cortar(Nivel, JugadorOriginal, Jugador, Alpha, Beta, Jugada, RestoJugadas, JugadaAux, MejorJugada, MejorPuntaje, MejorPuntajeHoja1).
 
-%if node is a terminal node return the heuristic value of node.
 mejor_jugada(_, _, _,Alpha, _, [], Jugada, Jugada, Alpha).
 
 
